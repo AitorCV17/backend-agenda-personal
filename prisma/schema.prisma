@@ -1,0 +1,88 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Usuario {
+  id         String   @id @default(uuid())
+  nombre     String
+  email      String   @unique
+  password   String
+  rol        Rol      @default(USER)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  deleted_at DateTime?
+
+  // Relaciones
+  eventos       Evento[]             @relation("EventosOrganizados")
+  participantes ParticipanteEvento[]
+  refreshTokens RefreshToken[]
+  recordatorios Recordatorio[]
+}
+
+model Evento {
+  id            String               @id @default(uuid())
+  titulo        String
+  descripcion   String?
+  ubicacion     String?
+  fecha_inicio  DateTime
+  fecha_fin     DateTime
+  created_at    DateTime             @default(now())
+  updated_at    DateTime             @updatedAt
+  deleted_at    DateTime?
+  organizadorId String
+  organizador   Usuario              @relation("EventosOrganizados", fields: [organizadorId], references: [id])
+  participantes ParticipanteEvento[]
+  recordatorios Recordatorio[]
+
+  @@index([organizadorId])
+}
+
+model ParticipanteEvento {
+  id                String           @id @default(uuid())
+  eventoId          String
+  usuarioId         String
+  estado_asistencia EstadoAsistencia @default(PENDIENTE)
+  created_at        DateTime         @default(now())
+  updated_at        DateTime         @updatedAt
+
+  evento  Evento  @relation(fields: [eventoId], references: [id])
+  usuario Usuario @relation(fields: [usuarioId], references: [id])
+}
+
+model Recordatorio {
+  id         String   @id @default(uuid())
+  eventoId   String
+  usuarioId  String?
+  enviado    Boolean  @default(false)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  evento  Evento   @relation(fields: [eventoId], references: [id])
+  usuario Usuario? @relation(fields: [usuarioId], references: [id])
+}
+
+model RefreshToken {
+  id               String   @id @default(uuid())
+  usuarioId        String
+  token            String   @unique
+  fecha_expiracion DateTime
+  created_at       DateTime @default(now())
+
+  usuario Usuario @relation(fields: [usuarioId], references: [id])
+}
+
+enum Rol {
+  USER
+  ADMIN
+}
+
+enum EstadoAsistencia {
+  ACEPTADO
+  RECHAZADO
+  PENDIENTE
+}

@@ -1,0 +1,30 @@
+# Directorio de dependencias
+node_modules/
+
+# Archivos compilados y de salida
+dist/
+*.tsbuildinfo
+
+# Archivos de entorno y variables sensibles
+.env
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Archivos del sistema operativo
+.DS_Store
+Thumbs.db
+
+# Configuraciones de editores e IDEs
+.vscode/
+.idea/
+
+# Cobertura de pruebas
+coverage/
+
+# Archivos de migraciones de Prisma (si no deseas versionarlas)
+prisma/migrations/
