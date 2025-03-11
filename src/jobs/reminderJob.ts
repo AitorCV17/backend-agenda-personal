@@ -1,3 +1,4 @@
+// src/jobs/reminderJob.ts
 import cron from 'node-cron';
 import nodemailer from 'nodemailer';
 import { config } from '../config';
@@ -16,16 +17,22 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-const sendReminderEmails = async () => {
+// Exporta la función para poder usarla en pruebas de integración
+export const sendReminderEmails = async () => {
   if (isJobRunning) {
     logger.warn('El job de recordatorios ya está en ejecución, saltando este ciclo.');
     return;
   }
   isJobRunning = true;
 
+  // Timeout para detectar ejecución prolongada (más de 5 minutos)
+  const jobTimeout = setTimeout(() => {
+    logger.error('El job de recordatorios ha excedido el tiempo de ejecución esperado.');
+    // Aquí se podría integrar un sistema de alertas (por ejemplo, enviar una notificación)
+  }, 5 * 60 * 1000);
+
   try {
     const now = new Date();
-    // Buscar recordatorios pendientes y cuyo evento aún no ha iniciado
     const reminders = await prisma.recordatorio.findMany({
       where: {
         enviado: false,
@@ -37,9 +44,13 @@ const sendReminderEmails = async () => {
     });
 
     for (const reminder of reminders) {
+      if (!reminder.usuario?.email) {
+        logger.warn(`No se encontró email para el recordatorio ${reminder.id}`);
+        continue;
+      }
       const mailOptions = {
         from: config.email.user,
-        to: reminder.usuario?.email,
+        to: reminder.usuario.email,
         subject: `Recordatorio para el evento: ${reminder.evento.titulo}`,
         text: `Este es un recordatorio para el evento "${reminder.evento.titulo}" que inicia el ${reminder.evento.fecha_inicio}.`,
       };
@@ -53,11 +64,11 @@ const sendReminderEmails = async () => {
   } catch (error) {
     logger.error(`Error en el envío de recordatorios: ${error}`);
   } finally {
+    clearTimeout(jobTimeout);
     isJobRunning = false;
   }
 };
 
-// Se puede configurar el schedule vía .env
 const jobSchedule = process.env.REMINDER_JOB_SCHEDULE || '* * * * *';
 
 export const initReminderJob = () => {

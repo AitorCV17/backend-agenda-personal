@@ -1,3 +1,4 @@
+// src/app.ts (fragmento modificado)
 import express from 'express';
 import helmet from 'helmet';
 import cors from 'cors';
@@ -9,15 +10,17 @@ import { initReminderJob } from './jobs/reminderJob';
 import { logger } from './utils/logger';
 import swaggerUi from 'swagger-ui-express';
 import swaggerDocument from './swagger.json';
+import { metricsMiddleware, metricsEndpoint } from './middlewares/metricsMiddleware';
 
 dotenv.config();
 
 const app = express();
 
-// Configuración de CORS: se utiliza FRONTEND_URL si está definida, sino se usa localhost por defecto.
-const allowedOrigins = process.env.FRONTEND_URL
-  ? [process.env.FRONTEND_URL]
-  : ['http://localhost:3000'];
+// Configuración de CORS según entorno
+const allowedOrigins =
+  process.env.NODE_ENV === 'production' && process.env.FRONTEND_URL
+    ? [process.env.FRONTEND_URL]
+    : ['http://localhost:3000', 'http://127.0.0.1:3000'];
 
 app.use(
   cors({
@@ -39,7 +42,13 @@ app.use(
   })
 );
 
-// Ruta para documentación Swagger
+// Middleware para métricas
+app.use(metricsMiddleware);
+
+// Endpoint para exponer métricas
+app.get('/metrics', metricsEndpoint);
+
+// Documentación Swagger
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 // Rutas principales

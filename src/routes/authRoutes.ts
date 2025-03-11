@@ -1,33 +1,74 @@
-import { Router } from 'express';
-import { body } from 'express-validator';
-import { register, login, googleAuthCallback, refreshToken } from '../controllers/authController';
-import { apiLimiter } from '../middlewares/rateLimitMiddleware';
+// src/controllers/authController.ts
+import { Request, Response, NextFunction } from 'express';
+import { validationResult } from 'express-validator';
+import * as authService from '../services/authService';
+import { RegisterUserDTO, LoginDTO } from '../types';
+import { CustomError } from '../utils/CustomError';
 
-const router = Router();
+export const register = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<Response | void> => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty())
+    return res.status(400).json({ errors: errors.array() });
+  try {
+    const user: RegisterUserDTO = req.body;
+    const newUser = await authService.register(user);
+    return res.status(201).json({ user: newUser });
+  } catch (error: any) {
+    next(new CustomError('Error al registrar el usuario', 500, 'REGISTER_ERROR'));
+  }
+};
 
-router.post(
-  '/register',
-  apiLimiter,
-  [
-    body('nombre').notEmpty().withMessage('El nombre es requerido'),
-    body('email').isEmail().withMessage('Email inválido'),
-    body('password').isLength({ min: 6 }).withMessage('La contraseña debe tener al menos 6 caracteres'),
-  ],
-  register
-);
+export const login = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<Response | void> => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty())
+    return res.status(400).json({ errors: errors.array() });
+  try {
+    const credentials: LoginDTO = req.body;
+    const tokens = await authService.login(credentials);
+    return res.json(tokens);
+  } catch (error: any) {
+    next(new CustomError('Credenciales inválidas', 401, 'LOGIN_ERROR'));
+  }
+};
 
-router.post(
-  '/login',
-  apiLimiter,
-  [
-    body('email').isEmail().withMessage('Email inválido'),
-    body('password').notEmpty().withMessage('La contraseña es requerida'),
-  ],
-  login
-);
+export const googleAuthCallback = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<Response | void> => {
+  try {
+    const googleToken = req.query.token || req.body.token;
+    if (!googleToken) {
+      return res.status(400).json({ error: 'Token de Google no proporcionado' });
+    }
+    const tokens = await authService.googleAuthLogin(googleToken as string);
+    return res.json(tokens);
+  } catch (error: any) {
+    next(new CustomError('Error en autenticación con Google', 401, 'GOOGLE_AUTH_ERROR'));
+  }
+};
 
-router.get('/google/callback', googleAuthCallback);
-
-router.post('/refresh-token', apiLimiter, refreshToken);
-
-export default router;
+export const refreshToken = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<Response | void> => {
+  try {
+    const { refreshToken } = req.body;
+    if (!refreshToken) {
+      return res.status(400).json({ error: 'Refresh token no proporcionado' });
+    }
+    const tokens = await authService.refreshAccessToken(refreshToken);
+    return res.json(tokens);
+  } catch (error: any) {
+    next(new CustomError('Refresh token inválido o expirado', 401, 'REFRESH_TOKEN_ERROR'));
+  }
+};

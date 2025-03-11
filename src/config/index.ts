@@ -1,6 +1,9 @@
 // src/config/index.ts
-import dotenv from 'dotenv';
-dotenv.config();
+import dotenvSafe from 'dotenv-safe';
+
+dotenvSafe.config({
+  example: '.env.example',
+});
 
 export const config = {
   port: process.env.PORT || 3000,
