@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { getProfile, updateProfile, deleteProfile } from '../controllers/userController';
+import { obtenerPerfil, actualizarPerfil, eliminarPerfil } from '../controllers/userController';
 import { authenticateJWT } from '../middlewares/authMiddleware';
 import { validateDTO } from '../middlewares/validation';
 import { UpdateUserDTO } from '../dtos/UserDTO';
@@ -9,8 +9,8 @@ const router = Router();
 
 router.use(authenticateJWT);
 
-router.get('/me', asyncHandler(getProfile));
-router.put('/me', validateDTO(UpdateUserDTO), asyncHandler(updateProfile));
-router.delete('/me', asyncHandler(deleteProfile));
+router.get('/me', asyncHandler(obtenerPerfil));
+router.put('/me', validateDTO(UpdateUserDTO), asyncHandler(actualizarPerfil));
+router.delete('/me', asyncHandler(eliminarPerfil));
 
 export default router;

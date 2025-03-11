@@ -6,80 +6,80 @@ import * as refreshTokenRepository from '../repositories/refreshTokenRepository'
 import { config } from '../config';
 import { Rol } from '@prisma/client';
 
-const REFRESH_TOKEN_EXPIRATION_DAYS = 7;
+const DIAS_EXPIRACION_REFRESH_TOKEN = 7;
 
-export const register = async (data: { nombre: string; email: string; password: string; rol?: Rol }) => {
-  const hashedPassword = await bcrypt.hash(data.password, 10);
-  // Se asigna el rol "USUARIO" por defecto en lugar de "USER"
-  const newUser = await userRepository.createUser({
-    nombre: data.nombre,
-    email: data.email,
-    password: hashedPassword,
-    rol: data.rol || ("USUARIO" as Rol),
+export const registrar = async (datos: { nombre: string; email: string; password: string; rol?: Rol }) => {
+  const passwordEncriptado = await bcrypt.hash(datos.password, 10);
+  // Se asigna el rol "USUARIO" por defecto
+  const nuevoUsuario = await userRepository.crearUsuario({
+    nombre: datos.nombre,
+    email: datos.email,
+    password: passwordEncriptado,
+    rol: datos.rol || ("USUARIO" as Rol),
   });
-  return newUser;
+  return nuevoUsuario;
 };
 
-export const login = async (data: { email: string; password: string }) => {
-  const user = await userRepository.findByEmail(data.email);
-  if (!user) throw new Error('Usuario no encontrado');
-  const isMatch = await bcrypt.compare(data.password, user.password);
-  if (!isMatch) throw new Error('Contraseña incorrecta');
+export const iniciarSesion = async (datos: { email: string; password: string }) => {
+  const usuario = await userRepository.buscarPorEmail(datos.email);
+  if (!usuario) throw new Error('Usuario no encontrado');
+  const coincidePassword = await bcrypt.compare(datos.password, usuario.password);
+  if (!coincidePassword) throw new Error('Contraseña incorrecta');
   const accessToken = firmarToken({
-    id: user.id,
-    email: user.email,
-    rol: user.rol,
+    id: usuario.id,
+    email: usuario.email,
+    rol: usuario.rol,
   });
-  const refreshTokenValue = crypto.randomBytes(64).toString('hex');
-  const expiration = new Date();
-  expiration.setDate(expiration.getDate() + REFRESH_TOKEN_EXPIRATION_DAYS);
-  await refreshTokenRepository.createRefreshToken({
-    usuarioId: user.id,
-    token: refreshTokenValue,
-    fecha_expiracion: expiration,
+  const valorRefreshToken = crypto.randomBytes(64).toString('hex');
+  const fechaExpiracion = new Date();
+  fechaExpiracion.setDate(fechaExpiracion.getDate() + DIAS_EXPIRACION_REFRESH_TOKEN);
+  await refreshTokenRepository.crearRefreshToken({
+    usuarioId: usuario.id,
+    token: valorRefreshToken,
+    fecha_expiracion: fechaExpiracion,
   });
-  return { accessToken, refreshToken: refreshTokenValue };
+  return { accessToken, refreshToken: valorRefreshToken };
 };
 
-export const refreshAccessToken = async (oldRefreshToken: string) => {
-  const storedToken = await refreshTokenRepository.findRefreshToken(oldRefreshToken);
-  if (!storedToken) throw new Error('Refresh token inválido');
-  if (new Date() > storedToken.fecha_expiracion) {
-    await refreshTokenRepository.deleteRefreshToken(oldRefreshToken);
+export const renovarToken = async (refreshTokenAntiguo: string) => {
+  const tokenAlmacenado = await refreshTokenRepository.buscarRefreshToken(refreshTokenAntiguo);
+  if (!tokenAlmacenado) throw new Error('Refresh token inválido');
+  if (new Date() > tokenAlmacenado.fecha_expiracion) {
+    await refreshTokenRepository.eliminarRefreshToken(refreshTokenAntiguo);
     throw new Error('Refresh token expirado');
   }
-  const user = await userRepository.findById(storedToken.usuarioId);
-  if (!user) throw new Error('Usuario no encontrado');
-  await refreshTokenRepository.deleteRefreshToken(oldRefreshToken);
+  const usuario = await userRepository.buscarPorId(tokenAlmacenado.usuarioId);
+  if (!usuario) throw new Error('Usuario no encontrado');
+  await refreshTokenRepository.eliminarRefreshToken(refreshTokenAntiguo);
   const accessToken = firmarToken({
-    id: user.id,
-    email: user.email,
-    rol: user.rol,
+    id: usuario.id,
+    email: usuario.email,
+    rol: usuario.rol,
   });
-  const newRefreshToken = crypto.randomBytes(64).toString('hex');
-  const newExpiration = new Date();
-  newExpiration.setDate(newExpiration.getDate() + REFRESH_TOKEN_EXPIRATION_DAYS);
-  await refreshTokenRepository.createRefreshToken({
-    usuarioId: user.id,
-    token: newRefreshToken,
-    fecha_expiracion: newExpiration,
+  const nuevoRefreshToken = crypto.randomBytes(64).toString('hex');
+  const nuevaExpiracion = new Date();
+  nuevaExpiracion.setDate(nuevaExpiracion.getDate() + DIAS_EXPIRACION_REFRESH_TOKEN);
+  await refreshTokenRepository.crearRefreshToken({
+    usuarioId: usuario.id,
+    token: nuevoRefreshToken,
+    fecha_expiracion: nuevaExpiracion,
   });
-  return { accessToken, refreshToken: newRefreshToken };
+  return { accessToken, refreshToken: nuevoRefreshToken };
 };
 
-export const googleAuthLogin = async (googleToken: string) => {
+export const autenticarGoogle = async (googleToken: string) => {
   const { OAuth2Client } = await import('google-auth-library');
-  const client = new OAuth2Client(config.googleAuth.clientId);
-  const ticket = await client.verifyIdToken({
+  const cliente = new OAuth2Client(config.googleAuth.clientId);
+  const ticket = await cliente.verifyIdToken({
     idToken: googleToken,
     audience: config.googleAuth.clientId,
   });
   const payload = ticket.getPayload();
   if (!payload || !payload.email) throw new Error('Token de Google inválido');
-  let user = await userRepository.findByEmail(payload.email);
-  if (!user) {
+  let usuario = await userRepository.buscarPorEmail(payload.email);
+  if (!usuario) {
     // Registrar nuevo usuario con rol "USUARIO" por defecto
-    user = await register({
+    usuario = await registrar({
       nombre: payload.name || '',
       email: payload.email,
       password: crypto.randomBytes(16).toString('hex'),
@@ -87,23 +87,23 @@ export const googleAuthLogin = async (googleToken: string) => {
     });
   }
   const accessToken = firmarToken({
-    id: user.id,
-    email: user.email,
-    rol: user.rol,
+    id: usuario.id,
+    email: usuario.email,
+    rol: usuario.rol,
   });
-  const refreshTokenValue = crypto.randomBytes(64).toString('hex');
-  const expiration = new Date();
-  expiration.setDate(expiration.getDate() + REFRESH_TOKEN_EXPIRATION_DAYS);
-  await refreshTokenRepository.createRefreshToken({
-    usuarioId: user.id,
-    token: refreshTokenValue,
-    fecha_expiracion: expiration,
+  const valorRefreshToken = crypto.randomBytes(64).toString('hex');
+  const fechaExpiracion = new Date();
+  fechaExpiracion.setDate(fechaExpiracion.getDate() + DIAS_EXPIRACION_REFRESH_TOKEN);
+  await refreshTokenRepository.crearRefreshToken({
+    usuarioId: usuario.id,
+    token: valorRefreshToken,
+    fecha_expiracion: fechaExpiracion,
   });
-  return { accessToken, refreshToken: refreshTokenValue };
+  return { accessToken, refreshToken: valorRefreshToken };
 };
 
-export const getProfile = async (userId: string) => {
-  const user = await userRepository.findById(userId);
-  if (!user) throw new Error('Usuario no encontrado');
-  return user;
+export const obtenerPerfil = async (idUsuario: string) => {
+  const usuario = await userRepository.buscarPorId(idUsuario);
+  if (!usuario) throw new Error('Usuario no encontrado');
+  return usuario;
 };

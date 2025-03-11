@@ -8,6 +8,7 @@ import csurf from 'csurf';
 import routes from './routes';
 import { errorHandler } from './middlewares/errorMiddleware';
 import { metricsMiddleware, metricsEndpoint } from './middlewares/metricsMiddleware';
+import { limitadorAPI } from './middlewares/rateLimitMiddleware';
 import { logger } from './utils/logger';
 import swaggerUi from 'swagger-ui-express';
 import swaggerJSDoc from 'swagger-jsdoc';
@@ -67,6 +68,9 @@ const swaggerOptions = {
 };
 const swaggerSpec = swaggerJSDoc(swaggerOptions);
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
+// Rate Limiter para todas las rutas de la API
+app.use('/api', limitadorAPI);
 
 // Rutas de la API
 app.use('/api', routes);

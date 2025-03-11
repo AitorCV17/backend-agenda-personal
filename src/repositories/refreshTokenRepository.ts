@@ -1,28 +1,28 @@
 import { prisma } from '../config/prisma';
 
-interface RefreshTokenData {
+interface DatosRefreshToken {
   usuarioId: string;
   token: string;
   fecha_expiracion: Date;
 }
 
-export const createRefreshToken = async (data: RefreshTokenData) => {
-  return prisma.refreshToken.create({ data });
+export const crearRefreshToken = async (datos: DatosRefreshToken) => {
+  return prisma.refreshToken.create({ data: datos });
 };
 
-export const findRefreshToken = async (token: string) => {
+export const buscarRefreshToken = async (token: string) => {
   return prisma.refreshToken.findUnique({
     where: { token },
   });
 };
 
-export const deleteRefreshToken = async (token: string) => {
+export const eliminarRefreshToken = async (token: string) => {
   return prisma.refreshToken.delete({
     where: { token },
   });
 };
 
-export const deleteRefreshTokensByUser = async (usuarioId: string) => {
+export const eliminarRefreshTokensUsuario = async (usuarioId: string) => {
   return prisma.refreshToken.deleteMany({
     where: { usuarioId },
   });
