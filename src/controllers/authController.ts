@@ -1,5 +1,4 @@
 import { Request, Response, NextFunction } from 'express';
-import { validationResult } from 'express-validator';
 import * as authService from '../services/authService';
 import { RegisterUserDTO, LoginDTO } from '../types';
 import { CustomError } from '../utils/CustomError';
@@ -9,10 +8,6 @@ export const register = async (
   res: Response,
   next: NextFunction,
 ): Promise<Response | void> => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty())
-    return res.status(400).json({ errors: errors.array() });
-
   try {
     const user: RegisterUserDTO = req.body;
     const newUser = await authService.register(user);
@@ -27,10 +22,6 @@ export const login = async (
   res: Response,
   next: NextFunction,
 ): Promise<Response | void> => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty())
-    return res.status(400).json({ errors: errors.array() });
-
   try {
     const credentials: LoginDTO = req.body;
     const tokens = await authService.login(credentials);
@@ -50,7 +41,6 @@ export const googleAuthCallback = async (
     if (!googleToken) {
       return res.status(400).json({ error: 'Token de Google no proporcionado' });
     }
-
     const tokens = await authService.googleAuthLogin(googleToken as string);
     return res.json(tokens);
   } catch (error: any) {
@@ -65,10 +55,6 @@ export const refreshToken = async (
 ): Promise<Response | void> => {
   try {
     const { refreshToken } = req.body;
-    if (!refreshToken) {
-      return res.status(400).json({ error: 'Refresh token no proporcionado' });
-    }
-
     const tokens = await authService.refreshAccessToken(refreshToken);
     return res.json(tokens);
   } catch (error: any) {

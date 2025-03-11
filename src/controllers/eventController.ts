@@ -1,5 +1,4 @@
 import { Request, Response, NextFunction } from 'express';
-import { validationResult } from 'express-validator';
 import { AuthRequest } from '../middlewares/authMiddleware';
 import * as eventService from '../services/eventService';
 import { CreateEventDTO, UpdateEventDTO } from '../types';
@@ -10,9 +9,6 @@ export const createEvent = async (
   res: Response,
   next: NextFunction,
 ): Promise<Response | void> => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
-
   try {
     const eventData: CreateEventDTO = req.body;
     const event = await eventService.createEvent(req.user?.id, eventData);
@@ -40,9 +36,6 @@ export const updateEvent = async (
   res: Response,
   next: NextFunction,
 ): Promise<Response | void> => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
-
   try {
     const eventData: UpdateEventDTO = req.body;
     const updatedEvent = await eventService.updateEvent(req.params.id, eventData);
