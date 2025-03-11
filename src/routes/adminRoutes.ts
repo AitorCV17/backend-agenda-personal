@@ -1,14 +1,18 @@
-import { Router } from 'express';
+import { Router, Request, Response, NextFunction } from 'express';
 import { authenticateJWT } from '../middlewares/authMiddleware';
 import { authorizeRole } from '../middlewares/roleMiddleware';
 
 const router = Router();
 
-// Se especifica la ruta base '/' para que la llamada a use sea válida.
-router.use('/', authenticateJWT, authorizeRole('ADMIN'));
+router.use((req: Request, res: Response, next: NextFunction) => {
+    authenticateJWT(req, res, (err) => {
+        if (err) return next(err);
+        authorizeRole('ADMIN')(req, res, next);
+    });
+});
 
-router.get('/dashboard', (req, res) => {
-  res.json({ message: 'Bienvenido al dashboard de administrador' });
+router.get('/dashboard', (req: Request, res: Response) => {
+    res.json({ message: 'Bienvenido al dashboard de administrador' });
 });
 
 export default router;

@@ -1,11 +1,13 @@
 import { Router } from 'express';
 import { createCalendar, getCalendars } from '../controllers/calendarController';
 import { authenticateJWT } from '../middlewares/authMiddleware';
+import { asyncHandler } from '../utils/asyncHandler';
 
 const router = Router();
 
-// Se agrega el path base '/' en cada use para evitar errores de tipo.
-router.post('/', authenticateJWT, createCalendar);
-router.get('/', authenticateJWT, getCalendars);
+router.use(authenticateJWT);
+
+router.post('/', asyncHandler(createCalendar));
+router.get('/', asyncHandler(getCalendars));
 
 export default router;

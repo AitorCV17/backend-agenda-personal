@@ -42,7 +42,6 @@ app.use(cookieParser());
 // Protección CSRF opcional
 if (process.env.USE_CSRF === 'true') {
   app.use(csurf({ cookie: true }));
-
 }
 
 app.use(

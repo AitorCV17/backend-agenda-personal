@@ -3,32 +3,15 @@ import { createEvent, getEvents, updateEvent, deleteEvent } from '../controllers
 import { validateDTO } from '../middlewares/validation';
 import { CreateEventDTO, UpdateEventDTO } from '../dtos/EventDTO';
 import { authenticateJWT } from '../middlewares/authMiddleware';
+import { asyncHandler } from '../utils/asyncHandler';
 
 const router = Router();
 
-// Especificamos la ruta base para el middleware
-router.use('/', authenticateJWT);
+router.use(authenticateJWT);
 
-router.post(
-  '/',
-  validateDTO(CreateEventDTO),
-  createEvent
-);
-
-router.get(
-  '/',
-  getEvents
-);
-
-router.put(
-  '/:id',
-  validateDTO(UpdateEventDTO),
-  updateEvent
-);
-
-router.delete(
-  '/:id',
-  deleteEvent
-);
+router.post('/', validateDTO(CreateEventDTO), asyncHandler(createEvent));
+router.get('/', asyncHandler(getEvents));
+router.put('/:id', validateDTO(UpdateEventDTO), asyncHandler(updateEvent));
+router.delete('/:id', asyncHandler(deleteEvent));
 
 export default router;
