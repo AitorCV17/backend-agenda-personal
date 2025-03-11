@@ -1,46 +1,44 @@
-// src/services/eventService.ts
 import * as eventRepository from '../repositories/eventRepository';
-import { CreateEventDTO, UpdateEventDTO } from '../types';
 
-/**
- * Crea un nuevo evento a partir de los datos proporcionados.
- * @param organizerId - ID del usuario organizador.
- * @param data - Datos del evento a crear.
- * @returns El evento creado.
- */
+// DTO con snake_case para las fechas, si así las recibe el frontend
+export interface CreateEventDTO {
+  titulo: string;
+  descripcion?: string;
+  ubicacion?: string;
+  fecha_inicio: string | Date; // Permite string o Date
+  fecha_fin: string | Date;    // Permite string o Date
+}
+
+export interface UpdateEventDTO {
+  titulo?: string;
+  descripcion?: string;
+  ubicacion?: string;
+  fecha_inicio?: string | Date; // Permite string o Date
+  fecha_fin?: string | Date;    // Permite string o Date
+}
+
 export const createEvent = async (
-  organizerId: string,
+  organizadorId: string, // Se utiliza para conectar al usuario organizador
   data: CreateEventDTO,
 ): Promise<any> => {
   return eventRepository.createEvent({
     titulo: data.titulo,
     descripcion: data.descripcion,
     ubicacion: data.ubicacion,
-    fecha_inicio: new Date(data.fecha_inicio),
-    fecha_fin: new Date(data.fecha_fin),
-    organizadorId: organizerId,
+    // Convertimos las fechas a Date
+    fechaInicio: new Date(data.fecha_inicio),
+    fechaFin: new Date(data.fecha_fin),
+    // Usamos la conexión anidada para relacionar el evento con el usuario
+    organizador: {
+      connect: { id: organizadorId },
+    },
   });
 };
 
-/**
- * Obtiene los eventos asociados a un usuario.
- * @param userId - ID del usuario.
- * @param query - Parámetros de consulta (actualmente no se usan filtros avanzados).
- * @returns Lista de eventos.
- */
-export const getEvents = async (
-  userId: string,
-  query: any,
-): Promise<any> => {
+export const getEvents = async (userId: string, query: any): Promise<any> => {
   return eventRepository.findEventsByUser(userId, query);
 };
 
-/**
- * Actualiza un evento existente.
- * @param eventId - ID del evento a actualizar.
- * @param data - Datos a actualizar.
- * @returns El evento actualizado.
- */
 export const updateEvent = async (
   eventId: string,
   data: UpdateEventDTO,
@@ -49,16 +47,12 @@ export const updateEvent = async (
     titulo: data.titulo,
     descripcion: data.descripcion,
     ubicacion: data.ubicacion,
-    fecha_inicio: data.fecha_inicio ? new Date(data.fecha_inicio) : undefined,
-    fecha_fin: data.fecha_fin ? new Date(data.fecha_fin) : undefined,
+    // Convertimos las fechas si están presentes
+    fechaInicio: data.fecha_inicio ? new Date(data.fecha_inicio) : undefined,
+    fechaFin: data.fecha_fin ? new Date(data.fecha_fin) : undefined,
   });
 };
 
-/**
- * Realiza un soft delete sobre un evento.
- * @param eventId - ID del evento a eliminar.
- * @returns El evento actualizado con la marca de eliminación.
- */
 export const deleteEvent = async (eventId: string): Promise<any> => {
   return eventRepository.softDeleteEvent(eventId);
 };

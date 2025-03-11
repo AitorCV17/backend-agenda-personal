@@ -1,19 +1,19 @@
 import { prisma } from '../config/prisma';
-import { CreateEventDTO, UpdateEventDTO } from '../types';
+import { Prisma } from '@prisma/client';
 
-export const createEvent = async (
-  data: CreateEventDTO & { organizadorId: string },
-) => {
+export const createEvent = async (data: Prisma.EventoCreateInput) => {
+  // Se utiliza EventoCreateInput, ya que las versiones "Unchecked" no están exportadas.
   return prisma.evento.create({ data });
 };
 
 export const findEventsByUser = async (userId: string, query: any) => {
   return prisma.evento.findMany({
-    where: { organizadorId: userId, deleted_at: null },
+    // Se usa la propiedad "eliminadoEn" (definida en el schema) para filtrar los eventos activos
+    where: { organizadorId: userId, eliminadoEn: null },
   });
 };
 
-export const updateEvent = async (eventId: string, data: UpdateEventDTO) => {
+export const updateEvent = async (eventId: string, data: Prisma.EventoUpdateInput) => {
   return prisma.evento.update({
     where: { id: eventId },
     data,
@@ -23,6 +23,6 @@ export const updateEvent = async (eventId: string, data: UpdateEventDTO) => {
 export const softDeleteEvent = async (eventId: string) => {
   return prisma.evento.update({
     where: { id: eventId },
-    data: { deleted_at: new Date() },
+    data: { eliminadoEn: new Date() },
   });
 };

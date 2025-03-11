@@ -1,17 +1,15 @@
-// src/middlewares/roleMiddleware.ts
 import { Request, Response, NextFunction } from 'express';
-import { AuthRequest } from './authMiddleware';
 import { logger } from '../utils/logger';
 
-// Verifica que el usuario autenticado tenga el rol requerido
 export const authorizeRole = (requiredRole: string) => {
-  return (req: AuthRequest, res: Response, next: NextFunction) => {
+  return (req: Request, res: Response, next: NextFunction) => {
     if (!req.user) {
-      logger.warn('Acceso denegado: usuario no autenticado.');
+      logger.warn('Acceso denegado: usuario no autenticado.', { path: req.path });
       return res.status(401).json({ error: 'No autenticado' });
     }
-    if (req.user.rol !== requiredRole) {
-      logger.warn(`Acceso denegado: se requiere rol ${requiredRole}`);
+    const userRole = (req.user as any).rol;
+    if (userRole !== requiredRole) {
+      logger.warn(`Acceso denegado: se requiere rol ${requiredRole}`, { userRole, path: req.path });
       return res.status(403).json({ error: 'Acceso prohibido' });
     }
     next();

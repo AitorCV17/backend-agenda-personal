@@ -2,22 +2,13 @@ import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { config } from '../config';
 
-export interface AuthRequest extends Request {
-  user?: any;
-}
-
-export const authenticateJWT = (
-  req: AuthRequest,
-  res: Response,
-  next: NextFunction,
-): void => {
+export const authenticateJWT = (req: Request, res: Response, next: NextFunction) => {
   const authHeader = req.headers.authorization;
-
   if (authHeader && authHeader.startsWith('Bearer ')) {
     const token = authHeader.split(' ')[1];
-
     try {
-      const decoded = jwt.verify(token, config.jwtSecret);
+      // Forzamos el tipo para que se ajuste al objeto esperado
+      const decoded = jwt.verify(token, config.jwtSecret) as { id: string; email: string; rol: string };
       req.user = decoded;
       next();
     } catch (error) {

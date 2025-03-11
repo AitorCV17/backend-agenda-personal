@@ -1,22 +1,23 @@
-// src/app.ts (fragmento modificado)
 import express from 'express';
 import helmet from 'helmet';
 import cors from 'cors';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
+import cookieParser from 'cookie-parser';
+import csurf from 'csurf';
 import routes from './routes';
 import { errorHandler } from './middlewares/errorMiddleware';
-import { initReminderJob } from './jobs/reminderJob';
+import { metricsMiddleware, metricsEndpoint } from './middlewares/metricsMiddleware';
 import { logger } from './utils/logger';
 import swaggerUi from 'swagger-ui-express';
-import swaggerDocument from './swagger.json';
-import { metricsMiddleware, metricsEndpoint } from './middlewares/metricsMiddleware';
+import swaggerJSDoc from 'swagger-jsdoc';
+/// <reference path="./types/express/index.d.ts" />
 
 dotenv.config();
 
 const app = express();
 
-// Configuración de CORS según entorno
+// Configuración de CORS
 const allowedOrigins =
   process.env.NODE_ENV === 'production' && process.env.FRONTEND_URL
     ? [process.env.FRONTEND_URL]
@@ -25,42 +26,58 @@ const allowedOrigins =
 app.use(
   cors({
     origin: (origin, callback) => {
-      if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+      if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
         callback(new Error('Origen no permitido por CORS'));
       }
     },
-  })
+  }),
 );
 
 app.use(helmet());
 app.use(express.json());
+app.use(cookieParser());
+
+// Protección CSRF opcional
+if (process.env.USE_CSRF === 'true') {
+  app.use(csurf({ cookie: true }));
+
+}
+
 app.use(
   morgan('combined', {
     stream: { write: (message) => logger.info(message.trim()) },
-  })
+  }),
 );
 
-// Middleware para métricas
+// Middleware de métricas
 app.use(metricsMiddleware);
-
-// Endpoint para exponer métricas
 app.get('/metrics', metricsEndpoint);
 
-// Documentación Swagger
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+// Configuración de documentación Swagger
+const swaggerOptions = {
+  definition: {
+    openapi: '3.0.0',
+    info: {
+      title: 'Agenda Personal API',
+      version: '1.0.0',
+    },
+  },
+  apis: ['./src/routes/*.ts', './src/dtos/*.ts'],
+};
+const swaggerSpec = swaggerJSDoc(swaggerOptions);
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
-// Rutas principales
+// Rutas de la API
 app.use('/api', routes);
 
-// Middleware de manejo de errores
+// Middleware global de manejo de errores
 app.use(errorHandler);
 
 const PORT = process.env.PORT || 3020;
 app.listen(PORT, () => {
   logger.info(`Servidor corriendo en el puerto ${PORT}`);
-  initReminderJob();
 });
 
 export default app;

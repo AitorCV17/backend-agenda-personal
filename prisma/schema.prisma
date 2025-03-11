@@ -8,36 +8,39 @@ generator client {
 }
 
 model Usuario {
-  id         String   @id @default(uuid())
-  nombre     String
-  email      String   @unique
-  password   String
-  rol        Rol      @default(USER)
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
-  deleted_at DateTime?
+  id            String   @id @default(uuid())
+  nombre        String
+  email         String   @unique
+  password      String
+  rol           Rol      @default(USUARIO)
+  creadoEn      DateTime @default(now())
+  actualizadoEn DateTime @updatedAt
+  eliminadoEn   DateTime?
 
   // Relaciones
-  eventos       Evento[]             @relation("EventosOrganizados")
+  eventos       Evento[]           @relation("EventosOrganizados")
   participantes ParticipanteEvento[]
   refreshTokens RefreshToken[]
   recordatorios Recordatorio[]
+  calendarios   Calendario[]
+  notas         Nota[]
+  horarios      Horario[]
 }
 
 model Evento {
-  id            String               @id @default(uuid())
-  titulo        String
-  descripcion   String?
-  ubicacion     String?
-  fecha_inicio  DateTime
-  fecha_fin     DateTime
-  created_at    DateTime             @default(now())
-  updated_at    DateTime             @updatedAt
-  deleted_at    DateTime?
-  organizadorId String
-  organizador   Usuario              @relation("EventosOrganizados", fields: [organizadorId], references: [id])
-  participantes ParticipanteEvento[]
-  recordatorios Recordatorio[]
+  id              String     @id @default(uuid())
+  titulo          String
+  descripcion     String?
+  ubicacion       String?
+  fechaInicio     DateTime
+  fechaFin        DateTime
+  creadoEn        DateTime   @default(now())
+  actualizadoEn   DateTime   @updatedAt
+  eliminadoEn     DateTime?
+  organizadorId   String
+  organizador     Usuario    @relation("EventosOrganizados", fields: [organizadorId], references: [id])
+  participantes   ParticipanteEvento[]
+  recordatorios   Recordatorio[]
 
   @@index([organizadorId])
 }
@@ -46,24 +49,24 @@ model ParticipanteEvento {
   id                String           @id @default(uuid())
   eventoId          String
   usuarioId         String
-  estado_asistencia EstadoAsistencia @default(PENDIENTE)
-  created_at        DateTime         @default(now())
-  updated_at        DateTime         @updatedAt
+  estadoAsistencia  EstadoAsistencia @default(PENDIENTE)
+  creadoEn          DateTime         @default(now())
+  actualizadoEn     DateTime         @updatedAt
 
   evento  Evento  @relation(fields: [eventoId], references: [id])
   usuario Usuario @relation(fields: [usuarioId], references: [id])
 }
 
 model Recordatorio {
-  id         String   @id @default(uuid())
-  eventoId   String
-  usuarioId  String?
-  enviado    Boolean  @default(false)
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
+  id              String   @id @default(uuid())
+  eventoId        String
+  usuarioId       String?
+  enviado         Boolean  @default(false)
+  creadoEn        DateTime @default(now())
+  actualizadoEn   DateTime @updatedAt
 
   evento  Evento   @relation(fields: [eventoId], references: [id])
-  usuario Usuario? @relation(fields: [usuarioId], references: [id])
+  usuario Usuario? @relation(fields: [usuarioId], references: [id], onDelete: SetNull)
 }
 
 model RefreshToken {
@@ -71,13 +74,40 @@ model RefreshToken {
   usuarioId        String
   token            String   @unique
   fecha_expiracion DateTime
-  created_at       DateTime @default(now())
+  usuario          Usuario  @relation(fields: [usuarioId], references: [id])
+}
 
-  usuario Usuario @relation(fields: [usuarioId], references: [id])
+model Calendario {
+  id             String   @id @default(uuid())
+  titulo         String
+  usuarioId      String
+  creadoEn       DateTime @default(now())
+  actualizadoEn  DateTime @updatedAt
+  usuario        Usuario  @relation(fields: [usuarioId], references: [id])
+}
+
+model Nota {
+  id             String   @id @default(uuid())
+  titulo         String
+  contenido      String?
+  usuarioId      String
+  creadoEn       DateTime @default(now())
+  actualizadoEn  DateTime @updatedAt
+  usuario        Usuario  @relation(fields: [usuarioId], references: [id])
+}
+
+model Horario {
+  id             String   @id @default(uuid())
+  inicio         DateTime
+  fin            DateTime
+  usuarioId      String
+  creadoEn       DateTime @default(now())
+  actualizadoEn  DateTime @updatedAt
+  usuario        Usuario  @relation(fields: [usuarioId], references: [id])
 }
 
 enum Rol {
-  USER
+  USUARIO
   ADMIN
 }
 

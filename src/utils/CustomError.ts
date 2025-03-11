@@ -1,13 +1,10 @@
-// src/utils/CustomError.ts
 export class CustomError extends Error {
-    public status: number;
-    public code: string;
-  
-    constructor(message: string, status: number = 500, code: string = 'INTERNAL_ERROR') {
-      super(message);
-      this.status = status;
-      this.code = code;
-      Object.setPrototypeOf(this, CustomError.prototype);
-    }
+  status: number;  // Añadimos la propiedad status
+  code: string;    // Añadimos la propiedad code
+
+  constructor(message: string, statusCode: number, errorCode: string) {
+    super(message);
+    this.status = statusCode;
+    this.code = errorCode;
   }
-  
+}

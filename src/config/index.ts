@@ -5,7 +5,7 @@ dotenvSafe.config({
 });
 
 export const config = {
-  port: process.env.PORT || 3000,
+  port: process.env.PORT || 3020,
   jwtSecret: process.env.JWT_SECRET || 'default_secret',
   jwtExpiration: process.env.JWT_EXPIRATION || '1h',
   email: {
@@ -20,5 +20,5 @@ export const config = {
     callbackURL: process.env.GOOGLE_CALLBACK_URL || '',
   },
   databaseUrl: process.env.DATABASE_URL || '',
-  frontendUrl: process.env.FRONTEND_URL || 'http://localhost:3000', // 👈 AQUI VA EL CAMBIO
+  frontendUrl: process.env.FRONTEND_URL || 'http://localhost:3000',
 };

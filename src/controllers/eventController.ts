@@ -1,59 +1,47 @@
 import { Request, Response, NextFunction } from 'express';
-import { AuthRequest } from '../middlewares/authMiddleware';
 import * as eventService from '../services/eventService';
-import { CreateEventDTO, UpdateEventDTO } from '../types';
 import { CustomError } from '../utils/CustomError';
 
-export const createEvent = async (
-  req: AuthRequest,
-  res: Response,
-  next: NextFunction,
-): Promise<Response | void> => {
+export const createEvent = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const eventData: CreateEventDTO = req.body;
-    const event = await eventService.createEvent(req.user?.id, eventData);
+    const eventData = req.body;
+    const userId = (req.user as { id: string; email: string; rol: string } | undefined)?.id;
+    if (!userId) return res.status(400).json({ error: 'Usuario no autenticado' });
+    const event = await eventService.createEvent(userId, eventData);
     return res.status(201).json(event);
-  } catch (error: any) {
+  } catch (error) {
     next(new CustomError('Error al crear el evento', 500, 'CREATE_EVENT_ERROR'));
   }
 };
 
-export const getEvents = async (
-  req: AuthRequest,
-  res: Response,
-  next: NextFunction,
-): Promise<Response | void> => {
+export const getEvents = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const events = await eventService.getEvents(req.user?.id, req.query);
+    const userId = (req.user as { id: string; email: string; rol: string } | undefined)?.id;
+    if (!userId) return res.status(400).json({ error: 'Usuario no autenticado' });
+    const events = await eventService.getEvents(userId, req.query);
     return res.json(events);
-  } catch (error: any) {
+  } catch (error) {
     next(new CustomError('Error al obtener los eventos', 500, 'GET_EVENTS_ERROR'));
   }
 };
 
-export const updateEvent = async (
-  req: AuthRequest,
-  res: Response,
-  next: NextFunction,
-): Promise<Response | void> => {
+export const updateEvent = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const eventData: UpdateEventDTO = req.body;
-    const updatedEvent = await eventService.updateEvent(req.params.id, eventData);
+    const eventData = req.body;
+    const eventId = req.params.id;
+    const updatedEvent = await eventService.updateEvent(eventId, eventData);
     return res.json(updatedEvent);
-  } catch (error: any) {
+  } catch (error) {
     next(new CustomError('Error al actualizar el evento', 500, 'UPDATE_EVENT_ERROR'));
   }
 };
 
-export const deleteEvent = async (
-  req: AuthRequest,
-  res: Response,
-  next: NextFunction,
-): Promise<Response | void> => {
+export const deleteEvent = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    await eventService.deleteEvent(req.params.id);
+    const eventId = req.params.id;
+    await eventService.deleteEvent(eventId);
     return res.json({ message: 'Evento eliminado (soft delete)' });
-  } catch (error: any) {
+  } catch (error) {
     next(new CustomError('Error al eliminar el evento', 500, 'DELETE_EVENT_ERROR'));
   }
 };

@@ -1,6 +1,6 @@
 import { prisma } from '../config/prisma';
 import { Rol } from '@prisma/client';
-import { RegisterUserDTO, UpdateProfileDTO } from '../types';
+import { RegisterUserDTO, UpdateUserDTO } from '../dtos/UserDTO';
 
 export const createUser = async (
   data: RegisterUserDTO & { password: string; rol?: Rol }
@@ -16,6 +16,6 @@ export const findById = async (id: string) => {
   return prisma.usuario.findUnique({ where: { id } });
 };
 
-export const updateUser = async (id: string, data: UpdateProfileDTO) => {
+export const updateUser = async (id: string, data: UpdateUserDTO) => {
   return prisma.usuario.update({ where: { id }, data });
 };

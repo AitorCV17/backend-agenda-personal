@@ -1,5 +1,5 @@
 import * as userRepository from '../repositories/userRepository';
-import { UpdateProfileDTO } from '../types';
+import { UpdateUserDTO } from '../dtos/UserDTO';
 
 export const getProfile = async (userId: string): Promise<any> => {
   return userRepository.findById(userId);
@@ -7,7 +7,7 @@ export const getProfile = async (userId: string): Promise<any> => {
 
 export const updateProfile = async (
   userId: string,
-  data: UpdateProfileDTO,
+  data: UpdateUserDTO,
 ): Promise<any> => {
   return userRepository.updateUser(userId, {
     nombre: data.nombre,
