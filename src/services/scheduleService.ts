@@ -12,6 +12,20 @@ export const createSchedule = async (userId: string, startTime: Date, endTime: D
 
 export const getSchedules = async (userId: string) => {
   return prisma.horario.findMany({
-    where: { usuarioId: userId },
+    where: { usuarioId: userId, eliminadoEn: null },
+  });
+};
+
+export const updateSchedule = async (scheduleId: string, startTime: Date, endTime: Date) => {
+  return prisma.horario.update({
+    where: { id: scheduleId },
+    data: { inicio: startTime, fin: endTime },
+  });
+};
+
+export const deleteSchedule = async (scheduleId: string) => {
+  return prisma.horario.update({
+    where: { id: scheduleId },
+    data: { eliminadoEn: new Date() },
   });
 };

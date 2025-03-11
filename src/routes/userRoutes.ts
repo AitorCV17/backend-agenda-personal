@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { getProfile, updateProfile } from '../controllers/userController';
+import { getProfile, updateProfile, deleteProfile } from '../controllers/userController';
 import { authenticateJWT } from '../middlewares/authMiddleware';
 import { validateDTO } from '../middlewares/validation';
 import { UpdateUserDTO } from '../dtos/UserDTO';
@@ -11,5 +11,6 @@ router.use(authenticateJWT);
 
 router.get('/me', asyncHandler(getProfile));
 router.put('/me', validateDTO(UpdateUserDTO), asyncHandler(updateProfile));
+router.delete('/me', asyncHandler(deleteProfile));
 
 export default router;

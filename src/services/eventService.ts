@@ -1,34 +1,32 @@
 import * as eventRepository from '../repositories/eventRepository';
 
-// DTO con snake_case para las fechas, si así las recibe el frontend
+// DTO con camelCase para las fechas
 export interface CreateEventDTO {
   titulo: string;
   descripcion?: string;
   ubicacion?: string;
-  fecha_inicio: string | Date; // Permite string o Date
-  fecha_fin: string | Date;    // Permite string o Date
+  fechaInicio: string | Date; // Permite string o Date
+  fechaFin: string | Date;    // Permite string o Date
 }
 
 export interface UpdateEventDTO {
   titulo?: string;
   descripcion?: string;
   ubicacion?: string;
-  fecha_inicio?: string | Date; // Permite string o Date
-  fecha_fin?: string | Date;    // Permite string o Date
+  fechaInicio?: string | Date;
+  fechaFin?: string | Date;
 }
 
 export const createEvent = async (
-  organizadorId: string, // Se utiliza para conectar al usuario organizador
+  organizadorId: string,
   data: CreateEventDTO,
 ): Promise<any> => {
   return eventRepository.createEvent({
     titulo: data.titulo,
     descripcion: data.descripcion,
     ubicacion: data.ubicacion,
-    // Convertimos las fechas a Date
-    fechaInicio: new Date(data.fecha_inicio),
-    fechaFin: new Date(data.fecha_fin),
-    // Usamos la conexión anidada para relacionar el evento con el usuario
+    fechaInicio: new Date(data.fechaInicio),
+    fechaFin: new Date(data.fechaFin),
     organizador: {
       connect: { id: organizadorId },
     },
@@ -47,9 +45,8 @@ export const updateEvent = async (
     titulo: data.titulo,
     descripcion: data.descripcion,
     ubicacion: data.ubicacion,
-    // Convertimos las fechas si están presentes
-    fechaInicio: data.fecha_inicio ? new Date(data.fecha_inicio) : undefined,
-    fechaFin: data.fecha_fin ? new Date(data.fecha_fin) : undefined,
+    fechaInicio: data.fechaInicio ? new Date(data.fechaInicio) : undefined,
+    fechaFin: data.fechaFin ? new Date(data.fechaFin) : undefined,
   });
 };
 

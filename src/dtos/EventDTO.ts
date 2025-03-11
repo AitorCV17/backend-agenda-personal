@@ -17,11 +17,11 @@ export class CreateEventDTO {
 
   @IsNotEmpty({ message: 'La fecha de inicio es requerida' })
   @IsISO8601({} as any, { message: 'Fecha de inicio inválida' })
-  fecha_inicio!: string;
+  fechaInicio!: string;
 
   @IsNotEmpty({ message: 'La fecha de fin es requerida' })
   @IsISO8601({} as any, { message: 'Fecha de fin inválida' })
-  fecha_fin!: string;
+  fechaFin!: string;
 }
 
 export class UpdateEventDTO {
@@ -42,9 +42,9 @@ export class UpdateEventDTO {
 
   @IsOptional()
   @IsISO8601({} as any, { message: 'Fecha de inicio inválida' })
-  fecha_inicio?: string;
+  fechaInicio?: string;
 
   @IsOptional()
   @IsISO8601({} as any, { message: 'Fecha de fin inválida' })
-  fecha_fin?: string;
+  fechaFin?: string;
 }

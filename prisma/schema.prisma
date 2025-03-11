@@ -83,6 +83,7 @@ model Calendario {
   usuarioId      String
   creadoEn       DateTime @default(now())
   actualizadoEn  DateTime @updatedAt
+  eliminadoEn    DateTime?
   usuario        Usuario  @relation(fields: [usuarioId], references: [id])
 }
 
@@ -93,6 +94,7 @@ model Nota {
   usuarioId      String
   creadoEn       DateTime @default(now())
   actualizadoEn  DateTime @updatedAt
+  eliminadoEn    DateTime?
   usuario        Usuario  @relation(fields: [usuarioId], references: [id])
 }
 
@@ -103,6 +105,7 @@ model Horario {
   usuarioId      String
   creadoEn       DateTime @default(now())
   actualizadoEn  DateTime @updatedAt
+  eliminadoEn    DateTime?
   usuario        Usuario  @relation(fields: [usuarioId], references: [id])
 }
 
