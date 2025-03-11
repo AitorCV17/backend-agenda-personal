@@ -5,7 +5,7 @@ import { authorizeRole } from '../middlewares/roleMiddleware';
 
 const router = Router();
 
-// Todas las rutas en /admin requieren autenticación y rol ADMIN
+// Requiere autenticación y rol ADMIN
 router.use(authenticateJWT, authorizeRole('ADMIN'));
 
 router.get('/dashboard', (req, res) => {
