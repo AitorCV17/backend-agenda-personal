@@ -1,6 +1,6 @@
 import bcrypt from 'bcrypt';
 import crypto from 'crypto';
-import { signToken } from '../utils/jwtUtils';
+import { firmarToken } from '../utils/jwtUtils';
 import * as userRepository from '../repositories/userRepository';
 import * as refreshTokenRepository from '../repositories/refreshTokenRepository';
 import { config } from '../config';
@@ -25,7 +25,7 @@ export const login = async (data: { email: string; password: string }) => {
   if (!user) throw new Error('Usuario no encontrado');
   const isMatch = await bcrypt.compare(data.password, user.password);
   if (!isMatch) throw new Error('Contraseña incorrecta');
-  const accessToken = signToken({
+  const accessToken = firmarToken({
     id: user.id,
     email: user.email,
     rol: user.rol,
@@ -51,7 +51,7 @@ export const refreshAccessToken = async (oldRefreshToken: string) => {
   const user = await userRepository.findById(storedToken.usuarioId);
   if (!user) throw new Error('Usuario no encontrado');
   await refreshTokenRepository.deleteRefreshToken(oldRefreshToken);
-  const accessToken = signToken({
+  const accessToken = firmarToken({
     id: user.id,
     email: user.email,
     rol: user.rol,
@@ -86,7 +86,7 @@ export const googleAuthLogin = async (googleToken: string) => {
       rol: "USUARIO" as Rol,
     });
   }
-  const accessToken = signToken({
+  const accessToken = firmarToken({
     id: user.id,
     email: user.email,
     rol: user.rol,
