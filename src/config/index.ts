@@ -1,4 +1,3 @@
-// src/config/index.ts
 import dotenvSafe from 'dotenv-safe';
 
 dotenvSafe.config({
@@ -21,4 +20,5 @@ export const config = {
     callbackURL: process.env.GOOGLE_CALLBACK_URL || '',
   },
   databaseUrl: process.env.DATABASE_URL || '',
+  frontendUrl: process.env.FRONTEND_URL || 'http://localhost:3000', // 👈 AQUI VA EL CAMBIO
 };

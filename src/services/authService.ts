@@ -47,9 +47,7 @@ export const login = async (data: LoginDTO): Promise<any> => {
 export const refreshAccessToken = async (
   oldRefreshToken: string,
 ): Promise<any> => {
-  const storedToken = await refreshTokenRepository.findRefreshToken(
-    oldRefreshToken,
-  );
+  const storedToken = await refreshTokenRepository.findRefreshToken(oldRefreshToken);
   if (!storedToken) throw new Error('Refresh token inválido');
 
   if (new Date() > storedToken.fecha_expiracion) {

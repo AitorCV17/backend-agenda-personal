@@ -2,7 +2,10 @@ import { Request, Response, NextFunction } from 'express';
 import * as authService from '../services/authService';
 import { RegisterUserDTO, LoginDTO } from '../types';
 import { CustomError } from '../utils/CustomError';
+import { OAuth2Client } from 'google-auth-library';
+import { config } from '../config';
 
+// Registro de usuario
 export const register = async (
   req: Request,
   res: Response,
@@ -17,6 +20,7 @@ export const register = async (
   }
 };
 
+// Login de usuario
 export const login = async (
   req: Request,
   res: Response,
@@ -31,23 +35,50 @@ export const login = async (
   }
 };
 
+// Callback de Google OAuth
 export const googleAuthCallback = async (
   req: Request,
   res: Response,
   next: NextFunction,
 ): Promise<Response | void> => {
   try {
-    const googleToken = req.query.token || req.body.token;
-    if (!googleToken) {
-      return res.status(400).json({ error: 'Token de Google no proporcionado' });
+    const code = req.query.code as string;
+
+    if (!code) {
+      return res.status(400).json({ error: 'No se recibió el parámetro "code" de Google' });
     }
-    const tokens = await authService.googleAuthLogin(googleToken as string);
-    return res.json(tokens);
+
+    const client = new OAuth2Client(
+      config.googleAuth.clientId,
+      config.googleAuth.clientSecret,
+      config.googleAuth.callbackURL
+    );
+
+    const { tokens } = await client.getToken(code);
+
+    if (!tokens.id_token) {
+      return res.status(400).json({ error: 'No se obtuvo id_token de Google' });
+    }
+
+    const finalTokens = await authService.googleAuthLogin(tokens.id_token);
+
+    const frontendCallbackUrl = `${config.frontendUrl}/auth/callback?accessToken=${finalTokens.accessToken}&refreshToken=${finalTokens.refreshToken}`;
+
+    console.log('[GoogleAuthCallback] Redirigiendo a:', frontendCallbackUrl);
+
+    return res.redirect(frontendCallbackUrl);
   } catch (error: any) {
-    next(new CustomError('Error en autenticación con Google', 401, 'GOOGLE_AUTH_ERROR'));
+    next(
+      new CustomError(
+        'Error en autenticación con Google: ' + error.message,
+        401,
+        'GOOGLE_AUTH_ERROR'
+      )
+    );
   }
 };
 
+// Refresh Token
 export const refreshToken = async (
   req: Request,
   res: Response,
